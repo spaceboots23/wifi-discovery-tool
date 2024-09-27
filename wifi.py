@@ -1,4 +1,8 @@
 import subprocess
+from colorama import init, Fore, Style
+
+# Initialize Colorama
+init()
 
 OUI_FILE = 'manuf'  # The downloaded Wireshark OUI file name
 
@@ -30,6 +34,15 @@ def get_manufacturer(mac, oui_dict):
     mac_prefix = ':'.join(mac.split(':')[:3]).upper()  # Get the first three bytes of the MAC address
     return oui_dict.get(mac_prefix, 'Unknown Manufacturer')
 
+def get_color_for_signal(signal):
+    """Return color based on signal strength."""
+    if signal > 70:
+        return Fore.GREEN  # Strong Signal
+    elif signal > 50:
+        return Fore.YELLOW  # Good Signal
+    else:
+        return Fore.RED  # Weak Signal
+
 def list_and_sort_wifi_networks_linux(oui_dict):
     try:
         # Run the 'nmcli' command to get SSID, BSSID, and signal strength (RSSI)
@@ -59,7 +72,8 @@ def list_and_sort_wifi_networks_linux(oui_dict):
             print("Available Wi-Fi Networks (sorted by RSSI):")
             for index, network in enumerate(sorted_networks):
                 manufacturer = get_manufacturer(network['BSSID'], oui_dict)
-                print(f"{index + 1}. SSID: {network['SSID']}, RSSI: {network['SIGNAL']}%, BSSID: {network['BSSID']}, Manufacturer: {manufacturer}")
+                color = get_color_for_signal(network['SIGNAL'])  # Get color based on signal strength
+                print(f"{color}{index + 1}. SSID: {network['SSID']}, RSSI: {network['SIGNAL']}%, BSSID: {network['BSSID']}, Manufacturer: {manufacturer}{Style.RESET_ALL}")
         else:
             print(f"Failed to run command: {result.stderr}")
     except Exception as e:
